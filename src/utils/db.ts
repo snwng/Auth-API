@@ -2,7 +2,7 @@ import Database from "bun:sqlite";
 import type { User, NewUser } from "./interfaces";
 import config from "./config";
 
-const db = new Database(config.DB_PATH);
+const db = new Database(config.DB_PATH, { safeIntegers: true });
 
 // Init the sqlite table
 db.run(

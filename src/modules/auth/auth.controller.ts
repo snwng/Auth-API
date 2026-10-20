@@ -2,6 +2,7 @@ import { Users } from "../../utils/db";
 import {
 	generatehash,
 	generateToken,
+	createTokenPayload,
 	verifyCrid,
 	verifyToken,
 } from "./auth.services";
@@ -30,14 +31,12 @@ async function signUp(req: Request, res: Response) {
 			lastName,
 		};
 		let { lastInsertRowid } = Users.addUser(user);
-		const id = lastInsertRowid.toString();
-
-		const payload = { id, email };
+		const payload = createTokenPayload(BigInt(lastInsertRowid), email);
 		const accessToken = generateToken(payload, "30m");
 		const refreshToken = generateToken(payload, "7d");
 
-		const id_bigint = BigInt(lastInsertRowid);
-		Users.updateRefreshToken(id_bigint, refreshToken);
+		const userId = BigInt(lastInsertRowid);
+		Users.updateRefreshToken(userId, refreshToken);
 
 		return res.status(201).json({ accessToken, refreshToken });
 	} catch (error) {
@@ -89,14 +88,15 @@ function refreshToken(req: Request, res: Response) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		const user = Users.getById(BigInt(payload.id));
+		const userId = BigInt(payload.id);
+		const user = Users.getById(userId);
 		if (!user || user.refreshToken !== refreshToken) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 		const newAccessToken = generateToken(payload, "30m");
 		const newRefreshToken = generateToken(payload, "7d");
 
-		Users.updateRefreshToken(BigInt(payload.id), newRefreshToken);
+		Users.updateRefreshToken(userId, newRefreshToken);
 
 		return res.status(200).json({
 			accessToken: newAccessToken,
@@ -111,9 +111,9 @@ function refreshToken(req: Request, res: Response) {
 function logOut(req: Request, res: Response) {
 	try {
 		const { id } = req.user as Tokenpayload;
-		const id_bigint = BigInt(id);
+		const userId = BigInt(id);
 
-		Users.updateRefreshToken(id_bigint, null);
+		Users.updateRefreshToken(userId, null);
 
 		return res.status(200).json({ message: "Logged out successfully" });
 	} catch (error) {

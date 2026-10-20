@@ -11,6 +11,10 @@ if (!JWT_SECRET) {
 
 const SALT_ROUNDS = config.SALT_ROUNDS;
 
+function createTokenPayload(id: bigint, email: string): Tokenpayload {
+	return { id: id.toString(), email };
+}
+
 function generateToken(payload: Tokenpayload, time: ExpiresIn = "30m"): string {
 	return jwt.sign(payload, JWT_SECRET, {
 		expiresIn: time,
@@ -45,4 +49,10 @@ async function verifyCrid(email: string, password: string): Promise<User> {
 	return user;
 }
 
-export { generateToken, generatehash, verifyToken, verifyCrid };
+export {
+	createTokenPayload,
+	generateToken,
+	generatehash,
+	verifyToken,
+	verifyCrid,
+};
