@@ -1,9 +1,27 @@
+import type jwt from "jsonwebtoken";
+
 interface User {
-  id: number;
+  id: bigint;
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  refreshToken: string | null;
+  createdAt: string;
+}
+
+interface NewUser {
   email: string;
   firstName: string;
   lastName: string;
   password: string;
 }
 
-export type  { User };
+interface Tokenpayload {
+  id: string;
+  email: string;
+}
+
+type ExpiresIn = jwt.SignOptions["expiresIn"];
+
+export type { User, NewUser, Tokenpayload, ExpiresIn };
