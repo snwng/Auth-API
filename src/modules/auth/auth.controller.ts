@@ -6,7 +6,7 @@ import {
 	verifyCrid,
 	verifyToken,
 } from "./auth.services";
-import type { User, NewUser, Tokenpayload } from "../../utils/interfaces";
+import type { User, NewUser, Tokenpayload } from "../../utils/types";
 import type { Request, Response } from "express";
 
 async function signUp(req: Request, res: Response) {
@@ -30,7 +30,7 @@ async function signUp(req: Request, res: Response) {
 			firstName,
 			lastName,
 		};
-		let { lastInsertRowid } = Users.addUser(user);
+		let { lastInsertRowid } = Users.add(user);
 		const payload = createTokenPayload(BigInt(lastInsertRowid), email);
 		const accessToken = generateToken(payload, "30m");
 		const refreshToken = generateToken(payload, "7d");
@@ -92,13 +92,21 @@ function refreshToken(req: Request, res: Response) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		const userId = BigInt(payload.id);
+		let userId: bigint;
+		try {
+			userId = BigInt(payload.id);
+		} catch (error) {
+			return res.status(401).json({ message: "Invalid refresh token" });
+		}
+
 		const user = Users.getById(userId);
 		if (!user || user.refreshToken !== refreshToken) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
-		const newAccessToken = generateToken(payload, "30m");
-		const newRefreshToken = generateToken(payload, "7d");
+
+		const freshPayload = createTokenPayload(userId, user.email);
+		const newAccessToken = generateToken(freshPayload, "30m");
+		const newRefreshToken = generateToken(freshPayload, "7d");
 
 		Users.updateRefreshToken(userId, newRefreshToken);
 

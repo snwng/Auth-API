@@ -1,5 +1,5 @@
 import { Users } from "../../utils/db";
-import type { Tokenpayload } from "../../utils/interfaces";
+import type { Tokenpayload, User } from "../../utils/types";
 import type { Request, Response } from "express";
 
 function getUser(req: Request, res: Response) {

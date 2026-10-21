@@ -1,5 +1,5 @@
-import Database from "bun:sqlite";
-import type { User, NewUser } from "./interfaces";
+import Database, { type Changes } from "bun:sqlite";
+import type { User, NewUser } from "./types";
 import config from "./config";
 
 const db = new Database(config.DB_PATH, { safeIntegers: true });
@@ -16,17 +16,15 @@ db.run(
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP );`,
 );
 
-const byMail = db.prepare<User, [string]>(
-	"SELECT * FROM users WHERE email = ?",
-);
+const byMail = db.prepare<User, string>("SELECT * FROM users WHERE email = ?");
 
-const byId = db.prepare<User, [bigint]>("SELECT * FROM users WHERE id = ?");
+const byId = db.prepare<User, bigint>("SELECT * FROM users WHERE id = ?");
 
-const addUser = db.prepare<void, [string, string, string, string]>(
+const addUser = db.prepare<Changes, [string, string, string, string]>(
 	"INSERT INTO users (email, firstName, lastName, password) VALUES (?, ?, ?, ?)",
 );
 
-const updateRT = db.prepare<void, [string | null, bigint]>(
+const updateRT = db.prepare<Changes, [string | null, bigint]>(
 	"UPDATE users SET refreshToken = ? WHERE id = ?",
 );
 
@@ -39,13 +37,13 @@ class Users {
 		return byId.get(id);
 	}
 
-	static addUser(user: NewUser) {
+	static add(user: NewUser): Changes {
 		const { email, firstName, lastName, password } = user;
 		return addUser.run(email, firstName, lastName, password);
 	}
 
-	static updateRefreshToken(id: bigint, refreshToken: string | null) {
-		return updateRT.run(refreshToken, id);
+	static updateRefreshToken(id: bigint, rt: string | null): Changes {
+		return updateRT.run(rt, id);
 	}
 }
 

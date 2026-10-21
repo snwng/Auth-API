@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import config from "../../utils/config";
 import { Users } from "../../utils/db";
-import type { User, Tokenpayload, ExpiresIn } from "../../utils/interfaces";
+import type { User, Tokenpayload, ExpiresIn } from "../../utils/types";
 
 const JWT_SECRET = config.JWT_SECRET;
 const SALT_ROUNDS = config.SALT_ROUNDS;

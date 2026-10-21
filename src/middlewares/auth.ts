@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import config from "../utils/config";
-import type { Tokenpayload } from "../utils/interfaces";
+import type { Tokenpayload } from "../utils/types";
 import type { Request, Response, NextFunction } from "express";
 
 const JWT_SECRET = config.JWT_SECRET;
