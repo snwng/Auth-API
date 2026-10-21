@@ -88,6 +88,10 @@ function refreshToken(req: Request, res: Response) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
+		if (!payload.id || !payload.email) {
+			return res.status(401).json({ message: "Invalid refresh token" });
+		}
+
 		const userId = BigInt(payload.id);
 		const user = Users.getById(userId);
 		if (!user || user.refreshToken !== refreshToken) {

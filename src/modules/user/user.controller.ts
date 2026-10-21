@@ -13,7 +13,6 @@ function getUser(req: Request, res: Response) {
 	}
 
 	const { password, refreshToken, id: userIdBigInt , ...userWithoutSensitiveInfo } = user;
-
 	return res.status(200).json({id ,...userWithoutSensitiveInfo});
 }
 

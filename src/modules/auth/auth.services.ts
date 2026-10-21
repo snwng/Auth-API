@@ -5,10 +5,6 @@ import { Users } from "../../utils/db";
 import type { User, Tokenpayload, ExpiresIn } from "../../utils/interfaces";
 
 const JWT_SECRET = config.JWT_SECRET;
-if (!JWT_SECRET) {
-	throw new Error("JWT_SECRET is not defined in environment variables");
-}
-
 const SALT_ROUNDS = config.SALT_ROUNDS;
 
 function createTokenPayload(id: bigint, email: string): Tokenpayload {

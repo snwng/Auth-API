@@ -1,21 +1,33 @@
-# lost_found_api
+# auth_api
 
-To install dependencies:
+A small JWT-based authentication API built with Express 5 and Bun's built-in SQLite (`bun:sqlite`).
+
+## Setup
 
 ```bash
 bun install
+cp .env.example .env
 ```
 
-To run:
+Set these in `.env`: `JWT_SECRET`, `DB_PATH` (e.g. `./db.sqlite`). Optional: `PORT` (default 5000), `SALT_ROUNDS` (default 10).
+
+## Run
 
 ```bash
-bun run app.ts
+bun run src/app.ts
 ```
 
-To type check:
+## API
 
-```bash
-bun check
-```
+All routes are under `/api`. Protected routes need an `Authorization: Bearer <accessToken>` header.
 
-This project was created using `bun init` in bun v1.4.3. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+- `POST /auth/signup` — create account, returns access + refresh tokens
+- `POST /auth/login` — log in, returns access + refresh tokens
+- `POST /auth/refresh-token` — rotate refresh token, returns new token pair
+- `POST /auth/logout` — invalidate the stored refresh token (protected)
+- `GET /user/me` — current user (protected)
+- `GET /` — health check
+
+## Auth flow
+
+Access tokens are JWTs valid for 30 minutes. Refresh tokens are JWTs valid for 7 days, stored per user in the database and rotated on use.
