@@ -1,26 +1,10 @@
 import type jwt from "jsonwebtoken";
+import type { userSchema, signUpSchema, tokenPayloadSchema } from "./validation";
+import type * as z from "zod";
 
-interface User {
-  id: bigint;
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  refreshToken: string | null;
-  createdAt: string;
-}
-
-interface NewUser {
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-}
-
-interface Tokenpayload {
-  id: string;
-  email: string;
-}
+type User = z.infer< typeof userSchema>;
+type NewUser = z.infer< typeof signUpSchema>;
+type Tokenpayload = z.infer< typeof tokenPayloadSchema>;
 
 declare global {
   namespace Express {

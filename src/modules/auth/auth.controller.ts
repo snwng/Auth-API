@@ -2,20 +2,30 @@ import { Users } from "../../utils/db";
 import {
 	generatehash,
 	generateToken,
-	createTokenPayload,
 	verifyCrid,
 	verifyToken,
 } from "./auth.services";
-import type { User, NewUser, Tokenpayload } from "../../utils/types";
+import {
+	signUpSchema,
+	logInSchema,
+	tokenPayloadSchema,
+	jwtSchema,
+} from "../../utils/validation";
+
+import type { NewUser, Tokenpayload } from "../../utils/types";
 import type { Request, Response } from "express";
 
 async function signUp(req: Request, res: Response) {
 	try {
-		const { email, password, firstName, lastName } = req.body || {};
-
-		if (!email || !password || !firstName || !lastName) {
-			return res.status(400).json({ message: "Missing required fields" });
+		const signUpInfo = req.body || {};
+		const parsedInfo = signUpSchema.safeParse(signUpInfo);
+		if (!parsedInfo.success) {
+			return res.status(400).json({
+				message: "Invalid request body",
+				errors: parsedInfo.error.issues,
+			});
 		}
+		const { email, password, firstName, lastName } = parsedInfo.data;
 
 		const existingUser = Users.getByEmail(email);
 		if (existingUser) {
@@ -23,7 +33,6 @@ async function signUp(req: Request, res: Response) {
 		}
 
 		const passwordhash = await generatehash(password);
-
 		const user: NewUser = {
 			email,
 			password: passwordhash,
@@ -31,10 +40,10 @@ async function signUp(req: Request, res: Response) {
 			lastName,
 		};
 		let { lastInsertRowid } = Users.add(user);
-		const payload = createTokenPayload(BigInt(lastInsertRowid), email);
+
+		const payload = { id: BigInt(lastInsertRowid), email };
 		const accessToken = generateToken(payload, "30m");
 		const refreshToken = generateToken(payload, "7d");
-
 		const userId = BigInt(lastInsertRowid);
 		Users.updateRefreshToken(userId, refreshToken);
 
@@ -47,11 +56,15 @@ async function signUp(req: Request, res: Response) {
 
 async function logIn(req: Request, res: Response) {
 	try {
-		const { email, password } = req.body || {};
-
-		if (!email || !password) {
-			return res.status(400).json({ message: "Missing required fields" });
+		const logInInfo = req.body || {};
+		const parsedInfo = logInSchema.safeParse(logInInfo);
+		if (!parsedInfo.success) {
+			return res.status(400).json({
+				message: "Invalid request body",
+				errors: parsedInfo.error.issues,
+			});
 		}
+		const { email, password } = parsedInfo.data;
 
 		let user;
 		try {
@@ -60,12 +73,11 @@ async function logIn(req: Request, res: Response) {
 			return res.status(401).json({ message: "Invalid credentials" });
 		}
 
-		const id = user.id.toString();
-		const payload: Tokenpayload = { id, email: user.email };
+		const payload = { id: user.id, email } as Tokenpayload;
 		const refreshToken = generateToken(payload, "7d");
 		const accessToken = generateToken(payload, "30m");
-
 		Users.updateRefreshToken(user.id, refreshToken);
+
 		return res.status(200).json({ accessToken, refreshToken });
 	} catch (error) {
 		console.error(error);
@@ -77,37 +89,31 @@ function refreshToken(req: Request, res: Response) {
 	try {
 		const { refreshToken } = req.body || {};
 
-		if (!refreshToken) {
-			return res.status(400).json({ message: "Missing refresh token" });
+		const parsedToken = jwtSchema.safeParse(refreshToken);
+		if (!parsedToken.success) {
+			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		let payload: Tokenpayload;
+		let payload: any;
 		try {
-			payload = verifyToken(refreshToken) as Tokenpayload;
+			payload = verifyToken(parsedToken.data);
 		} catch (error) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
-
-		if (!payload.id || !payload.email) {
+		const parsedPayload = tokenPayloadSchema.safeParse(payload);
+		if (!parsedPayload.success) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		let userId: bigint;
-		try {
-			userId = BigInt(payload.id);
-		} catch (error) {
-			return res.status(401).json({ message: "Invalid refresh token" });
-		}
-
+		let userId = parsedPayload.data.id;
 		const user = Users.getById(userId);
 		if (!user || user.refreshToken !== refreshToken) {
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		const freshPayload = createTokenPayload(userId, user.email);
+		const freshPayload = { id: userId, email: user.email } as Tokenpayload;
 		const newAccessToken = generateToken(freshPayload, "30m");
 		const newRefreshToken = generateToken(freshPayload, "7d");
-
 		Users.updateRefreshToken(userId, newRefreshToken);
 
 		return res.status(200).json({
@@ -123,9 +129,8 @@ function refreshToken(req: Request, res: Response) {
 function logOut(req: Request, res: Response) {
 	try {
 		const { id } = req.user as Tokenpayload;
-		const userId = BigInt(id);
 
-		Users.updateRefreshToken(userId, null);
+		Users.updateRefreshToken(id, null);
 
 		return res.status(200).json({ message: "Logged out successfully" });
 	} catch (error) {
