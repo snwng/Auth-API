@@ -5,12 +5,7 @@ import {
 	verifyCrid,
 	verifyToken,
 } from "./auth.services";
-import {
-	signUpSchema,
-	logInSchema,
-	tokenPayloadSchema,
-	jwtSchema,
-} from "../../utils/validation";
+import { signUpSchema, logInSchema } from "../../utils/validation";
 
 import type { NewUser, Tokenpayload } from "../../utils/types";
 import type { Request, Response } from "express";
@@ -89,29 +84,23 @@ function refreshToken(req: Request, res: Response) {
 	try {
 		const { refreshToken } = req.body || {};
 
-		const parsedToken = jwtSchema.safeParse(refreshToken);
-		if (!parsedToken.success) {
-			return res.status(401).json({ message: "Invalid refresh token" });
-		}
-
-		let payload: any;
+		let payload: Tokenpayload;
 		try {
-			payload = verifyToken(parsedToken.data);
+			payload = verifyToken(refreshToken);
 		} catch (error) {
-			return res.status(401).json({ message: "Invalid refresh token" });
-		}
-		const parsedPayload = tokenPayloadSchema.safeParse(payload);
-		if (!parsedPayload.success) {
+			console.log(refreshToken)
+			console.error(error);
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		let userId = parsedPayload.data.id;
+		let userId = payload.id;
 		const user = Users.getById(userId);
 		if (!user || user.refreshToken !== refreshToken) {
+			console.error("Refresh token mismatch or user not found");
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
-		const freshPayload = { id: userId, email: user.email } as Tokenpayload;
+		const freshPayload: Tokenpayload = { id: userId, email: user.email };
 		const newAccessToken = generateToken(freshPayload, "30m");
 		const newRefreshToken = generateToken(freshPayload, "7d");
 		Users.updateRefreshToken(userId, newRefreshToken);
@@ -129,7 +118,6 @@ function refreshToken(req: Request, res: Response) {
 function logOut(req: Request, res: Response) {
 	try {
 		const { id } = req.user as Tokenpayload;
-
 		Users.updateRefreshToken(id, null);
 
 		return res.status(200).json({ message: "Logged out successfully" });

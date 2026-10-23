@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import config from "../../utils/config";
 import { Users } from "../../utils/db";
+import { tokenPayloadSchema, jwtSchema } from "../../utils/validation";
+
 import type { User, Tokenpayload, ExpiresIn } from "../../utils/types";
 
 const JWT_SECRET = config.JWT_SECRET;
@@ -21,14 +23,11 @@ async function generatehash(password: string): Promise<string> {
 	return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
-function verifyToken(token: string): Tokenpayload {
-	let payload: Tokenpayload;
-	try {
-		payload = jwt.verify(token, JWT_SECRET) as Tokenpayload;
-	} catch (error) {
-		throw new Error("Invalid token", { cause: error });
-	}
-	return payload;
+function verifyToken(token: any): Tokenpayload {
+	const parsedToken = jwtSchema.parse(token);
+	const payload = jwt.verify(parsedToken, JWT_SECRET);
+	const parsedPayload = tokenPayloadSchema.parse(payload);
+	return parsedPayload;
 }
 
 async function verifyCrid(email: string, password: string): Promise<User> {
