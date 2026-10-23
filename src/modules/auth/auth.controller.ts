@@ -88,15 +88,12 @@ function refreshToken(req: Request, res: Response) {
 		try {
 			payload = verifyToken(refreshToken);
 		} catch (error) {
-			console.log(refreshToken)
-			console.error(error);
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
 		let userId = payload.id;
 		const user = Users.getById(userId);
 		if (!user || user.refreshToken !== refreshToken) {
-			console.error("Refresh token mismatch or user not found");
 			return res.status(401).json({ message: "Invalid refresh token" });
 		}
 
