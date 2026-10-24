@@ -13,12 +13,11 @@ function getUser(req: Request, res: Response) {
 	const {
 		password,
 		refreshToken,
-		id: idBigInt,
 		...userWithoutSensitiveInfo
 	} = user;
 	return res
 		.status(200)
-		.json({ id: id.toString(), ...userWithoutSensitiveInfo });
+		.json({ ...userWithoutSensitiveInfo });
 }
 
 export { getUser };

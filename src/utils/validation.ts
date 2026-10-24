@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 const userSchema = z.object({
-	id: z.bigint(),
+	id: z.number().int().nonnegative(),
 	email: z.email(),
 	firstName: z.string().nonempty(),
 	lastName: z.string().nonempty(),
@@ -23,7 +23,7 @@ const logInSchema = z.object({
 });
 
 const tokenPayloadSchema = z.object({
-	id: z.string().nonempty().pipe(z.coerce.bigint()),
+	id: z.number().int().nonnegative(),
 	email: z.email(),
 });
 

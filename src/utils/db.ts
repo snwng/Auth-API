@@ -2,7 +2,7 @@ import Database, { type Changes } from "bun:sqlite";
 import type { User, NewUser } from "./types";
 import config from "./config";
 
-const db = new Database(config.DB_PATH, { safeIntegers: true });
+const db = new Database(config.DB_PATH);
 
 // Init the sqlite table
 db.run(
@@ -18,13 +18,13 @@ db.run(
 
 const byMail = db.prepare<User, string>("SELECT * FROM users WHERE email = ?");
 
-const byId = db.prepare<User, bigint>("SELECT * FROM users WHERE id = ?");
+const byId = db.prepare<User, number>("SELECT * FROM users WHERE id = ?");
 
 const addUser = db.prepare<Changes, [string, string, string, string]>(
 	"INSERT INTO users (email, firstName, lastName, password) VALUES (?, ?, ?, ?)",
 );
 
-const updateRT = db.prepare<Changes, [string | null, bigint]>(
+const updateRT = db.prepare<Changes, [string | null, number]>(
 	"UPDATE users SET refreshToken = ? WHERE id = ?",
 );
 
@@ -33,7 +33,7 @@ class Users {
 		return byMail.get(email);
 	}
 
-	static getById(id: bigint): User | null {
+	static getById(id: number): User | null {
 		return byId.get(id);
 	}
 
@@ -42,7 +42,7 @@ class Users {
 		return addUser.run(email, firstName, lastName, password);
 	}
 
-	static updateRefreshToken(id: bigint, rt: string | null): Changes {
+	static updateRefreshToken(id: number, rt: string | null): Changes {
 		return updateRT.run(rt, id);
 	}
 }

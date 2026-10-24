@@ -34,13 +34,13 @@ async function signUp(req: Request, res: Response) {
 			firstName,
 			lastName,
 		};
-		let { lastInsertRowid } = Users.add(user);
+		let { lastInsertRowid: id } = Users.add(user);
+		id = id as number;
 
-		const payload = { id: BigInt(lastInsertRowid), email };
+		const payload = { id, email };
 		const accessToken = generateToken(payload, "30m");
 		const refreshToken = generateToken(payload, "7d");
-		const userId = BigInt(lastInsertRowid);
-		Users.updateRefreshToken(userId, refreshToken);
+		Users.updateRefreshToken(id, refreshToken);
 
 		return res.status(201).json({ accessToken, refreshToken });
 	} catch (error) {

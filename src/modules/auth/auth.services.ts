@@ -11,7 +11,7 @@ const SALT_ROUNDS = config.SALT_ROUNDS;
 
 function generateToken(payload: Tokenpayload, time: ExpiresIn = "30m"): string {
 	return jwt.sign(
-		{ id: payload.id.toString(), email: payload.email },
+		{ id: payload.id, email: payload.email },
 		JWT_SECRET,
 		{
 			expiresIn: time,
@@ -23,7 +23,7 @@ async function generatehash(password: string): Promise<string> {
 	return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
-function verifyToken(token: any): Tokenpayload {
+function verifyToken(token: unknown): Tokenpayload {
 	const parsedToken = jwtSchema.parse(token);
 	const payload = jwt.verify(parsedToken, JWT_SECRET);
 	const parsedPayload = tokenPayloadSchema.parse(payload);

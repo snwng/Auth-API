@@ -5,7 +5,7 @@ import type { Request, Response, NextFunction } from "express";
 async function authenticate(req: Request, res: Response, next: NextFunction) {
 	const authHeader = req.headers["authorization"] || "";
 	const [scheme, token] = authHeader.split(" ");
-	if (scheme !== "Bearer") {
+	if (scheme !== "Bearer" || !token) {
 		return res.status(401).json({
 			message: "Authentication Error: Access token missing or malformed",
 		});
