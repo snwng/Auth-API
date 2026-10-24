@@ -10,16 +10,12 @@ const JWT_SECRET = config.JWT_SECRET;
 const SALT_ROUNDS = config.SALT_ROUNDS;
 
 function generateToken(payload: Tokenpayload, time: ExpiresIn = "30m"): string {
-	return jwt.sign(
-		{ id: payload.id, email: payload.email },
-		JWT_SECRET,
-		{
-			expiresIn: time,
-		},
-	);
+	return jwt.sign({ id: payload.id, email: payload.email }, JWT_SECRET, {
+		expiresIn: time,
+	});
 }
 
-async function generatehash(password: string): Promise<string> {
+async function generateHash(password: string): Promise<string> {
 	return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
@@ -30,7 +26,7 @@ function verifyToken(token: unknown): Tokenpayload {
 	return parsedPayload;
 }
 
-async function verifyCrid(email: string, password: string): Promise<User> {
+async function verifyCred(email: string, password: string): Promise<User> {
 	const user = Users.getByEmail(email);
 	if (!user) {
 		throw new Error("User not found");
@@ -44,4 +40,4 @@ async function verifyCrid(email: string, password: string): Promise<User> {
 	return user;
 }
 
-export { generateToken, generatehash, verifyToken, verifyCrid };
+export { generateToken, generateHash, verifyToken, verifyCred };

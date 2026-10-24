@@ -1,8 +1,8 @@
 import { Users } from "../../utils/db";
 import {
-	generatehash,
+	generateHash,
 	generateToken,
-	verifyCrid,
+	verifyCred,
 	verifyToken,
 } from "./auth.services";
 import { signUpSchema, logInSchema } from "../../utils/validation";
@@ -27,10 +27,10 @@ async function signUp(req: Request, res: Response) {
 			return res.status(409).json({ message: "Email already in use" });
 		}
 
-		const passwordhash = await generatehash(password);
+		const passwordHash = await generateHash(password);
 		const user: NewUser = {
 			email,
-			password: passwordhash,
+			password: passwordHash,
 			firstName,
 			lastName,
 		};
@@ -63,7 +63,7 @@ async function logIn(req: Request, res: Response) {
 
 		let user;
 		try {
-			user = await verifyCrid(email, password);
+			user = await verifyCred(email, password);
 		} catch (error) {
 			return res.status(401).json({ message: "Invalid credentials" });
 		}
